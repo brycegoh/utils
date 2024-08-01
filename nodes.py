@@ -27,7 +27,11 @@ class BlackoutMLSD:
         image = image.cpu().numpy()  # Convert to NumPy and scale
         image = np.clip(image, 0, 255).astype(np.uint8)  # Ensure it's in uint8 format
         mask = masks[0].cpu().numpy()  # Convert mask to NumPy
-        mask = np.where(mask >= 0.01, 1, 0).astype(np.uint8)
+
+        # resize mask to match image
+        mask = Image.fromarray(mask)
+        mask = mask.resize((image.shape[1], image.shape[0]), Image.LANCZOS)
+        mask = np.array(mask)
 
         print(image.shape, mask.shape)  # This should print (896, 1152, 3) (896, 1152)
         # print unique values in mask
