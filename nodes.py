@@ -28,7 +28,7 @@ class BlackoutMLSD:
         image = np.clip(image, 0, 255).astype(np.uint8)  # Ensure it's in uint8 format
         mask = masks[0].cpu().numpy()  # Convert mask to NumPy
 
-        print(image.shape, mask.shape)
+        print(image.shape, mask.shape)  # This should print (896, 1152, 3) (896, 1152)
 
         # Ensure the mask has the same shape as the image (except for the channel dimension)
         if len(mask.shape) == 2:  # If mask is (H, W)
@@ -37,9 +37,9 @@ class BlackoutMLSD:
         # Expand the mask to match the image's channels
         mask = np.repeat(mask, 3, axis=-1)  # Expand mask to have the same number of channels as the image (H, W, 3)
 
-        print(image.shape, mask.shape)
-        # Apply the mask to the image
-        blacked_out_image = image * mask  # Element-wise multiplication
+        # Set the masked areas to black
+        blacked_out_image = image.copy()  # Create a copy of the image to modify
+        blacked_out_image[mask == 0] = 0  # Set pixels where mask is 0 to black
 
         # Convert back to torch tensor if needed
         blacked_out_image = torch.from_numpy(blacked_out_image).unsqueeze(0).float()  # Add batch dimension back and convert to float
