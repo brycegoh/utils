@@ -1,3 +1,9 @@
+import base64
+from io import BytesIO
+from PIL import Image
+import numpy as np
+
+
 
 class BlackoutMLSD:
     CATEGORY = "utils"
@@ -17,7 +23,11 @@ class BlackoutMLSD:
 
     def func(self, images, masks):
         image = images[0]
-        mask = masks[0]
+        image = 255. * image.cpu().numpy()
+        image = np.clip(image, 0, 255).astype(np.uint8)
+        mask = masks[0].cpu().numpy()
+
+        print(image.shape, mask.shape)
        # Ensure the mask has the same shape as the image (except for the channel dimension)
         if mask.dim() == 2:  # If mask is (H, W)
             mask = mask.unsqueeze(0)  # Add a channel dimension to make it (1, H, W)
