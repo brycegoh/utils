@@ -4,6 +4,8 @@ from PIL import Image
 import numpy as np
 import torch
 
+
+
 class BlackoutMLSD:
     CATEGORY = "utils"
 
@@ -27,7 +29,8 @@ class BlackoutMLSD:
         mask = masks[0].cpu().numpy()  # Convert mask to NumPy
 
         print(image.shape, mask.shape)  # This should print (896, 1152, 3) (896, 1152)
-
+        # print unique values in mask
+        print(np.unique(mask))
         # Ensure the mask has the same shape as the image (except for the channel dimension)
         if len(mask.shape) == 2:  # If mask is (H, W)
             mask = np.expand_dims(mask, axis=-1)  # Add a channel dimension to make it (H, W, 1)
