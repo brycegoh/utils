@@ -2,6 +2,7 @@ import base64
 from io import BytesIO
 from PIL import Image
 import numpy as np
+import torch
 
 
 
@@ -23,19 +24,22 @@ class BlackoutMLSD:
 
     def func(self, images, masks):
         image = images[0]
-        image = 255. * image.cpu().numpy()
-        image = np.clip(image, 0, 255).astype(np.uint8)
-        mask = masks[0].cpu().numpy()
+        image = 255. * image.cpu().numpy()  # Convert to NumPy and scale
+        image = np.clip(image, 0, 255).astype(np.uint8)  # Ensure it's in uint8 format
+        mask = masks[0].cpu().numpy()  # Convert mask to NumPy
 
-        print(image.shape, mask.shape)
-       # Ensure the mask has the same shape as the image (except for the channel dimension)
-        if mask.dim() == 2:  # If mask is (H, W)
-            mask = mask.unsqueeze(0)  # Add a channel dimension to make it (1, H, W)
+        print(image.shape, mask.shape)  # This should print (896, 1152, 3) (896, 1152)
 
-        if image.dim() == 3 and mask.dim() == 3:
-            mask = mask.expand_as(image)  # Expand the mask to match the image's channels (C, H, W)
+        # Ensure the mask has the same shape as the image (except for the channel dimension)
+        if len(mask.shape) == 2:  # If mask is (H, W)
+            mask = np.expand_dims(mask, axis=-1)  # Add a channel dimension to make it (H, W, 1)
 
+        # Expand the mask to match the image's channels
+        mask = np.repeat(mask, 3, axis=-1)  # Expand mask to have the same number of channels as the image (H, W, 3)
+
+        # Apply the mask to the image
         blacked_out_image = image * mask  # Element-wise multiplication
 
-        blacked_out_image = blacked_out_image.unsqueeze(0).float()  # Add batch dimension back
+        # Convert back to torch tensor if needed
+        blacked_out_image = torch.from_numpy(blacked_out_image).unsqueeze(0).float()  # Add batch dimension back and convert to float
         return (blacked_out_image,)
