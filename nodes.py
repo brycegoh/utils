@@ -4,8 +4,6 @@ from PIL import Image
 import numpy as np
 import torch
 
-
-
 class BlackoutMLSD:
     CATEGORY = "utils"
 
@@ -24,7 +22,7 @@ class BlackoutMLSD:
 
     def func(self, images, masks):
         image = images[0]
-        image = 255. * image.cpu().numpy()  # Convert to NumPy and scale
+        image = image.cpu().numpy()  # Convert to NumPy and scale
         image = np.clip(image, 0, 255).astype(np.uint8)  # Ensure it's in uint8 format
         mask = masks[0].cpu().numpy()  # Convert mask to NumPy
 
