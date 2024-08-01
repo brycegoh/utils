@@ -1,11 +1,3 @@
-import base64
-from io import BytesIO
-from PIL import Image
-import numpy as np
-import torch
-from transformers import pipeline, SamModel, SamProcessor
-import os
-
 
 class BlackoutMLSD:
     CATEGORY = "utils"
@@ -26,7 +18,14 @@ class BlackoutMLSD:
     def func(self, images, masks):
         image = images[0]
         mask = masks[0]
-        blacked_out_image = image * mask
+       # Ensure the mask has the same shape as the image (except for the channel dimension)
+        if mask.dim() == 2:  # If mask is (H, W)
+            mask = mask.unsqueeze(0)  # Add a channel dimension to make it (1, H, W)
 
-        blacked_out_image = blacked_out_image.unsqueeze(0).float()
+        if image.dim() == 3 and mask.dim() == 3:
+            mask = mask.expand_as(image)  # Expand the mask to match the image's channels (C, H, W)
+
+        blacked_out_image = image * mask  # Element-wise multiplication
+
+        blacked_out_image = blacked_out_image.unsqueeze(0).float()  # Add batch dimension back
         return (blacked_out_image,)
