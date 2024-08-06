@@ -3,6 +3,43 @@ from io import BytesIO
 from PIL import Image
 import numpy as np
 import torch
+import torchvision.transforms.functional as TF
+
+def tensor2rgb(t: torch.Tensor) -> torch.Tensor:
+    size = t.size()
+    if (len(size) < 4):
+        return t.unsqueeze(3).repeat(1, 1, 1, 3)
+    if size[3] == 1:
+        return t.repeat(1, 1, 1, 3)
+    elif size[3] == 4:
+        return t[:, :, :, :3]
+    else:
+        return t
+
+def tensor2rgba(t: torch.Tensor) -> torch.Tensor:
+    size = t.size()
+    if (len(size) < 4):
+        return t.unsqueeze(3).repeat(1, 1, 1, 4)
+    elif size[3] == 1:
+        return t.repeat(1, 1, 1, 4)
+    elif size[3] == 3:
+        alpha_tensor = torch.ones((size[0], size[1], size[2], 1))
+        return torch.cat((t, alpha_tensor), dim=3)
+    else:
+        return t
+    
+def tensor2mask(t: torch.Tensor) -> torch.Tensor:
+    size = t.size()
+    if (len(size) < 4):
+        return t
+    if size[3] == 1:
+        return t[:,:,:,0]
+    elif size[3] == 4:
+        # Not sure what the right thing to do here is. Going to try to be a little smart and use alpha unless all alpha is 1 in case we'll fallback to RGB behavior
+        if torch.min(t[:, :, :, 3]).item() != 1.:
+            return t[:,:,:,3]
+
+    return TF.rgb_to_grayscale(tensor2rgb(t).permute(0,3,1,2), num_output_channels=1)[:,0,:,:]
 
 
 
@@ -59,7 +96,7 @@ class PasteMask:
     def INPUT_TYPES(cls):
         return { 
             "required":{
-                "image_base": ("IMAGE",),
+                "base_image": ("IMAGE",),
                 "image_to_paste": ("IMAGE",),
                 "mask": ("IMAGE",),
             }
@@ -70,41 +107,30 @@ class PasteMask:
     FUNCTION = "func"
 
     def func(self, image_base, image_to_paste, mask):
-        # Assume all images and mask are of the same size and already in the required format
-        image_base = image_base[0].cpu().numpy()  # Convert base image to NumPy
-        image_to_paste = image_to_paste[0].cpu().numpy()  # Convert paste image to NumPy
-        mask = mask[0].cpu().numpy()  # Convert mask to NumPy
+        # Use the helper functions to convert the tensors to the desired format
+        image_base = tensor2rgba(image_base)  # Convert base image to RGBA
+        image_to_paste = tensor2rgba(image_to_paste)  # Convert paste image to RGBA
+        mask = tensor2mask(mask)  # Convert mask to a usable format (grayscale mask)
+
+        # Get the size of the images and mask
+        B, H, W, C = image_base.shape
 
         # Ensure the mask is normalized to [0, 1]
         mask = mask / 255.0
 
-        # Convert the images and mask to torch tensors (if needed)
-        image_base = torch.tensor(image_base).float()
-        image_to_paste = torch.tensor(image_to_paste).float()
-        mask = torch.tensor(mask).float()
+        # Convert the mask to 4-channel to match RGBA format
+        mask_repeated = mask.unsqueeze(-1).repeat(1, 1, 1, 4)
 
-        # Get the size of the images and mask
-        B, H, W, C = image_base.shape
+        # Invert the mask to apply to the base image
+        inverted_mask = 1.0 - mask_repeated
 
         # Create an empty result image
         result = image_base.clone()
 
         # Apply the mask to image_to_paste and blend with the base image
-        for i in range(B):
-            mask_i = mask[i].unsqueeze(-1).repeat(1, 1, C)  # Repeat mask for each channel
-            inverted_mask = 1.0 - mask_i
-
-            # Blend the cut-out portion of image_to_paste into the base image
-            result[i] = image_base[i] * inverted_mask + image_to_paste[i] * mask_i
+        result = image_base * inverted_mask + image_to_paste * mask_repeated
 
         # Convert result back to a format with batch size of 1
         result = result.unsqueeze(0)  # Add batch dimension
 
         return (result,)
-
-        # Blend the cut-out region into the base image
-        base_image = base_image * inverse_mask + cut_out
-
-        result_image = torch.from_numpy(base_image).unsqueeze(0).float()
-
-        return (result_image,)
