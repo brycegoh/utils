@@ -50,3 +50,54 @@ class BlackoutMLSD:
         # Convert back to torch tensor if needed
         blacked_out_image = torch.from_numpy(blacked_out_image).unsqueeze(0).float()  # Add batch dimension back and convert to float
         return (blacked_out_image,)
+
+
+class PasteMask:
+    CATEGORY = "utils"
+
+    @classmethod    
+    def INPUT_TYPES(cls):
+        return { 
+            "required":{
+                "base_image": ("IMAGE",),
+                "image_to_paste": ("IMAGE",),
+                "mask": ("MASK",),
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "func"
+
+    def func(self, base_image, image_to_paste, mask):
+        base_image = base_image[0]
+        base_image = base_image.cpu().numpy()  # Convert to NumPy and scale
+        base_image = np.clip(base_image, 0, 255).astype(np.uint8)  # Ensure it's in uint8 format
+
+        image_to_paste = image_to_paste[0]
+        image_to_paste = image_to_paste.cpu().numpy()
+        image_to_paste = np.clip(image_to_paste, 0, 255).astype(np.uint8)
+
+        mask = mask[0].cpu().numpy()  # Convert mask to NumPy
+
+        if len(mask.shape) == 2:  # if mask is grayscale (height, width)
+            mask = np.expand_dims(mask, axis=-1)  # Add a channel dimension
+    
+        # Normalize the mask to be between 0 and 1
+        mask = mask / 255.0
+
+        # Cut out the region from image_to_paste using the mask
+        cut_out = image_to_paste * mask
+
+        # Invert the mask to apply to the base image
+        inverse_mask = 1 - mask
+
+        # Blend the cut-out region into the base image
+        base_image = base_image * inverse_mask + cut_out
+
+        # Convert back to a format with batch size of 1
+        result_image = np.expand_dims(base_image, axis=0)
+
+        result_image = torch.from_numpy(result_image).unsqueeze(0).float()
+
+        return result_image
