@@ -136,18 +136,10 @@ class PasteMask:
         combined_image = base_image * (1 - boolean_mask) + cut_out_image
         
         # Convert the final image back to the format needed for further processing
-        combined_image = torch.tensor(combined_image).float().unsqueeze(0)  # Add batch dimension
-
-        cut_out_image = torch.tensor(cut_out_image).float().unsqueeze(0)
-            
-        # Convert the final image to a PyTorch tensor
-        combined_image_np = np.array(combined_image).astype(np.float32) / 255.0  # Normalize to [0, 1]
-        combined_image = torch.from_numpy(combined_image_np).unsqueeze(0)  # Add batch dimension
-
-        cut_out_image_np = np.array(combined_image).astype(np.float32) / 255.0  # Normalize to [0, 1]
-        cut_out_image = torch.from_numpy(cut_out_image_np).unsqueeze(0)  # Add batch dimension
+        combined_image = torch.from_numpy(combined_image / 255.0).unsqueeze(0)  # Add batch dimension
+        cut_out_image = torch.from_numpy(cut_out_image / 255.0).unsqueeze(0)  # Add batch dimension
         
-        return (combined_image, cut_out_image)
+        return (combined_image,cut_out_image)
 
 
 class PrintImageSize:
