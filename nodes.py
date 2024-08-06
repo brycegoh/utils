@@ -109,15 +109,16 @@ class PasteMask:
 
     def func(self, image_base, image_to_paste, mask):
         base_image = image_base[0]
-        base_image = base_image.cpu().numpy()  # Convert to NumPy and scale
+        base_image = 255. * base_image.cpu().numpy()  # Convert to NumPy and scale
         base_image = np.clip(base_image, 0, 255).astype(np.uint8)  # Ensure it's in uint8 format
 
         image_to_paste = image_to_paste[0]
-        image_to_paste = image_to_paste.cpu().numpy()
+        image_to_paste = 255. * image_to_paste.cpu().numpy()
         image_to_paste = np.clip(image_to_paste, 0, 255).astype(np.uint8)
 
+
         mask = mask[0]
-        mask = mask.cpu().numpy()
+        mask = 255. * mask.cpu().numpy()
         mask = np.clip(mask, 0, 255).astype(np.uint8)
 
         boolean_mask = mask > 0  # This creates a boolean mask where non-zero values are True
