@@ -103,8 +103,8 @@ class PasteMask:
             }
         }
 
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("image",)
+    RETURN_TYPES = ("IMAGE", "IMAGE")
+    RETURN_NAMES = ("image", "cut_out")
     FUNCTION = "func"
 
     def func(self, image_base, image_to_paste, mask):
@@ -140,8 +140,10 @@ class PasteMask:
         
         # Convert the final image back to the format needed for further processing
         combined_image = torch.tensor(combined_image).float().unsqueeze(0)  # Add batch dimension
+
+        cut_out_image = torch.tensor(cut_out_image).float().unsqueeze(0)
         
-        return (combined_image,)
+        return (combined_image, cut_out_image)
 
 
 class PrintImageSize:
