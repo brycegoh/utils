@@ -59,7 +59,7 @@ class PasteMask:
     def INPUT_TYPES(cls):
         return { 
             "required":{
-                "base_image": ("IMAGE",),
+                "image_base": ("IMAGE",),
                 "image_to_paste": ("IMAGE",),
                 "mask": ("IMAGE",),
             }
