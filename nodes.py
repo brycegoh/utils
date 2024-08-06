@@ -4,6 +4,7 @@ from PIL import Image
 import numpy as np
 import torch
 import torchvision.transforms.functional as TF
+import math
 
 def tensor2rgb(t: torch.Tensor) -> torch.Tensor:
     size = t.size()
@@ -106,34 +107,31 @@ class PasteMask:
     RETURN_NAMES = ("image",)
     FUNCTION = "func"
 
-    def func(self, image_base, image_to_paste, mask):
-        # Use the helper functions to convert the tensors to the desired format
-        image_base = tensor2rgba(image_base)  # Convert base image to RGBA
-        image_to_paste = tensor2rgba(image_to_paste)  # Convert paste image to RGBA
-        mask = tensor2mask(mask)  # Convert mask to a usable format (grayscale mask)
+    def func(self, image_base, image_to_paste, mask, resize_behavior, mask_mapping_optional = None):
+        image_base = tensor2rgba(image_base)
+        image_to_paste = tensor2rgba(image_to_paste)
+        mask = tensor2mask(mask)
 
-        # Get the size of the images and mask
-        B, H, W, C = image_base.shape
-
-        # Ensure the mask is normalized to [0, 1]
+        # Normalize the mask to [0, 1]
         mask = mask / 255.0
 
-        # Convert the mask to 4-channel to match RGBA format
-        mask_repeated = mask.unsqueeze(-1).repeat(1, 1, 1, 4)
+        # Convert the mask to 4 channels to match RGBA format
+        mask_repeated = mask.unsqueeze(-1).repeat(1, 1, 1, 4)  # Repeat the mask across the RGBA channels
 
-        # Invert the mask to apply to the base image
+        # Create an inverted mask
         inverted_mask = 1.0 - mask_repeated
 
-        # Create an empty result image
-        result = image_base.clone()
+        # Cut out sections from image_to_paste where the mask is non-black
+        cut_out = image_to_paste * mask_repeated
 
-        # Apply the mask to image_to_paste and blend with the base image
-        result = image_base * inverted_mask + image_to_paste * mask_repeated
+        # Paste the cut-out over image_base using the mask
+        result = image_base * inverted_mask + cut_out
 
-        # Convert result back to a format with batch size of 1
+        # Ensure the result has a batch size of 1
         result = result.unsqueeze(0)  # Add batch dimension
 
         return (result,)
+
 
 class PrintImageSize:
     CATEGORY = "utils"
