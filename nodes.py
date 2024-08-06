@@ -147,6 +147,8 @@ class PrintImageSize:
             }
         }
 
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "func"
 
     def func(self, image, prefix):
@@ -154,3 +156,4 @@ class PrintImageSize:
         image = image.cpu().numpy()
 
         print(f"{prefix}: {image.shape}")
+        return (image,)
