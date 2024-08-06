@@ -69,35 +69,38 @@ class PasteMask:
     RETURN_NAMES = ("image",)
     FUNCTION = "func"
 
-    def func(self, base_image, image_to_paste, mask):
-        base_image = base_image[0]
-        base_image = base_image.cpu().numpy()  # Convert to NumPy and scale
-        base_image = np.clip(base_image, 0, 255).astype(np.uint8)  # Ensure it's in uint8 format
+    def func(self, image_base, image_to_paste, mask):
+        # Assume all images and mask are of the same size and already in the required format
+        image_base = image_base[0].cpu().numpy()  # Convert base image to NumPy
+        image_to_paste = image_to_paste[0].cpu().numpy()  # Convert paste image to NumPy
+        mask = mask[0].cpu().numpy()  # Convert mask to NumPy
 
-        image_to_paste = image_to_paste[0]
-        image_to_paste = image_to_paste.cpu().numpy()
-        image_to_paste = np.clip(image_to_paste, 0, 255).astype(np.uint8)
-
-        mask = mask[0]
-        mask = mask.cpu().numpy()
-        mask = np.clip(mask, 0, 255).astype(np.uint8)
-
-        if len(mask.shape) == 3 and mask.shape[-1] == 3:  # if mask is in RGB
-            mask = mask[:, :, 0]  # Use the red channel or convert to grayscale
-
-        # Normalize the mask to be between 0 and 1, where 255 (white) becomes 1
+        # Ensure the mask is normalized to [0, 1]
         mask = mask / 255.0
 
-        # Expand the mask to have the same number of channels as the images
-        if len(base_image.shape) == 3 and base_image.shape[-1] > 1:
-            mask = np.expand_dims(mask, axis=-1)  # Add a channel dimension
-            mask = np.repeat(mask, base_image.shape[-1], axis=-1)  # Repeat across all channels
+        # Convert the images and mask to torch tensors (if needed)
+        image_base = torch.tensor(image_base).float()
+        image_to_paste = torch.tensor(image_to_paste).float()
+        mask = torch.tensor(mask).float()
 
-        # Cut out the region from image_to_paste using the mask
-        cut_out = image_to_paste * mask
+        # Get the size of the images and mask
+        B, H, W, C = image_base.shape
 
-        # Invert the mask to apply to the base image
-        inverse_mask = 1 - mask
+        # Create an empty result image
+        result = image_base.clone()
+
+        # Apply the mask to image_to_paste and blend with the base image
+        for i in range(B):
+            mask_i = mask[i].unsqueeze(-1).repeat(1, 1, C)  # Repeat mask for each channel
+            inverted_mask = 1.0 - mask_i
+
+            # Blend the cut-out portion of image_to_paste into the base image
+            result[i] = image_base[i] * inverted_mask + image_to_paste[i] * mask_i
+
+        # Convert result back to a format with batch size of 1
+        result = result.unsqueeze(0)  # Add batch dimension
+
+        return (result,)
 
         # Blend the cut-out region into the base image
         base_image = base_image * inverse_mask + cut_out
