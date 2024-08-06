@@ -134,3 +134,23 @@ class PasteMask:
         result = result.unsqueeze(0)  # Add batch dimension
 
         return (result,)
+
+class PrintImageSize:
+    CATEGORY = "utils"
+
+    @classmethod    
+    def INPUT_TYPES(cls):
+        return { 
+            "required":{
+                "image": ("IMAGE",),
+                "prefix": ("STRING", {"default": "image"}),
+            }
+        }
+
+    FUNCTION = "func"
+
+    def func(self, image, prefix):
+        image = image[0]
+        image = image.cpu().numpy()
+
+        print(f"{prefix}: {image.shape}")
