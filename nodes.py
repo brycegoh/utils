@@ -122,6 +122,9 @@ class PasteMask:
 
         ## Ensure mask is in the correct shape and has values of 0 or 1
         mask = mask / 255  # Normalize mask to be between 0 and 1
+
+        if len(mask.shape) == 2:
+            mask = np.repeat(mask[:, :, np.newaxis], 3, axis=2) 
         
         # Create a three-channel mask if the image is RGB
         if len(base_image.shape) == 3 and base_image.shape[-1] == 3:
