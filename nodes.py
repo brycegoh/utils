@@ -108,29 +108,35 @@ class PasteMask:
     FUNCTION = "func"
 
     def func(self, image_base, image_to_paste, mask):
-        image_base = tensor2rgba(image_base)
-        image_to_paste = tensor2rgba(image_to_paste)
-        mask = tensor2mask(mask)
+        base_image = image_base[0]
+        base_image = base_image.cpu().numpy()  # Convert to NumPy and scale
+        base_image = np.clip(base_image, 0, 255).astype(np.uint8)  # Ensure it's in uint8 format
 
-        # Normalize the mask to [0, 1]
-        mask = mask / 255.0
+        image_to_paste = image_to_paste[0]
+        image_to_paste = image_to_paste.cpu().numpy()
+        image_to_paste = np.clip(image_to_paste, 0, 255).astype(np.uint8)
 
-        # Convert the mask to 4 channels to match RGBA format
-        mask_repeated = mask.unsqueeze(-1).repeat(1, 1, 1, 4)  # Repeat the mask across the RGBA channels
+        mask = mask[0]
+        mask = mask.cpu().numpy()
+        mask = np.clip(mask, 0, 255).astype(np.uint8)
 
-        # Create an inverted mask
-        inverted_mask = 1.0 - mask_repeated
+        ## Ensure mask is in the correct shape and has values of 0 or 1
+        mask = mask / 255  # Normalize mask to be between 0 and 1
+        
+        # Create a three-channel mask if the image is RGB
+        if len(base_image.shape) == 3 and base_image.shape[-1] == 3:
+            mask = np.repeat(mask[:, :, np.newaxis], 3, axis=2)
+        
+        # Cut out the part of image_to_paste where mask is non-black
+        cut_out_image = image_to_paste * mask
+        
+        # Paste the cut out onto the base image
+        combined_image = base_image * (1 - mask) + cut_out_image
+        
+        # Convert the final image back to the format needed for further processing
+        combined_image = torch.tensor(combined_image).float().unsqueeze(0) 
 
-        # Cut out sections from image_to_paste where the mask is non-black
-        cut_out = image_to_paste * mask_repeated
-
-        # Paste the cut-out over image_base using the mask
-        result = image_base * inverted_mask + cut_out
-
-        # Ensure the result has a batch size of 1
-        result = result.unsqueeze(0)  # Add batch dimension
-
-        return (result,)
+        return (combined_image,)
 
 
 class PrintImageSize:
