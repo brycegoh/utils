@@ -120,24 +120,27 @@ class PasteMask:
         mask = mask.cpu().numpy()
         mask = np.clip(mask, 0, 255).astype(np.uint8)
 
-        ## Ensure mask is in the correct shape and has values of 0 or 1
-        mask = mask / 255  # Normalize mask to be between 0 and 1
-
-        if len(mask.shape) == 2:
-            mask = np.repeat(mask[:, :, np.newaxis], 3, axis=2) 
+        boolean_mask = mask > 0  # This creates a boolean mask where non-zero values are True
+    
+        # Ensure mask matches image_to_paste and base_image dimensions
+        if boolean_mask.shape[-1] != base_image.shape[-1]:
+            boolean_mask = boolean_mask[:, :, :, 0]  # Reduce to match the shape of the images
         
-        print("mask shape:", mask.shape)
-        print("base_image shape:", base_image.shape)
-        print("image_to_paste shape:", image_to_paste.shape)
-        # Cut out the part of image_to_paste where mask is non-black
-        cut_out_image = image_to_paste * mask
+        boolean_mask = boolean_mask.astype(np.uint8)  # Convert boolean mask to uint8 for multiplication
+        
+        # Ensure the boolean mask matches the image shape
+        assert boolean_mask.shape == image_to_paste.shape == base_image.shape, \
+            f"Boolean mask shape {boolean_mask.shape} does not match image_to_paste shape {image_to_paste.shape} or base_image shape {base_image.shape}"
+        
+        # Cut out the part of image_to_paste where mask is non-zero
+        cut_out_image = image_to_paste * boolean_mask
         
         # Paste the cut out onto the base image
-        combined_image = base_image * (1 - mask) + cut_out_image
+        combined_image = base_image * (1 - boolean_mask) + cut_out_image
         
         # Convert the final image back to the format needed for further processing
-        combined_image = torch.tensor(combined_image).float().unsqueeze(0) 
-
+        combined_image = torch.tensor(combined_image).float().unsqueeze(0)  # Add batch dimension
+        
         return (combined_image,)
 
 
