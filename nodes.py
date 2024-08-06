@@ -122,10 +122,6 @@ class PasteMask:
         mask = np.clip(mask, 0, 255).astype(np.uint8)
 
         boolean_mask = mask > 0  # This creates a boolean mask where non-zero values are True
-    
-        # Ensure mask matches image_to_paste and base_image dimensions
-        if boolean_mask.shape[-1] != base_image.shape[-1]:
-            boolean_mask = boolean_mask[:, :, :, 0]  # Reduce to match the shape of the images
         
         boolean_mask = boolean_mask.astype(np.uint8)  # Convert boolean mask to uint8 for multiplication
         
@@ -143,6 +139,13 @@ class PasteMask:
         combined_image = torch.tensor(combined_image).float().unsqueeze(0)  # Add batch dimension
 
         cut_out_image = torch.tensor(cut_out_image).float().unsqueeze(0)
+            
+        # Convert the final image to a PyTorch tensor
+        combined_image_np = np.array(combined_image).astype(np.float32) / 255.0  # Normalize to [0, 1]
+        combined_image = torch.from_numpy(combined_image_np).unsqueeze(0)  # Add batch dimension
+
+        cut_out_image_np = np.array(combined_image).astype(np.float32) / 255.0  # Normalize to [0, 1]
+        cut_out_image = torch.from_numpy(cut_out_image_np).unsqueeze(0)  # Add batch dimension
         
         return (combined_image, cut_out_image)
 
