@@ -104,4 +104,4 @@ class PasteMask:
 
         result_image = torch.from_numpy(base_image).unsqueeze(0).float()
 
-        return result_image
+        return (result_image,)
