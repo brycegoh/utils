@@ -152,8 +152,5 @@ class PrintImageSize:
     FUNCTION = "func"
 
     def func(self, image, prefix):
-        image = image[0]
-        image = image.cpu().numpy()
-
         print(f"{prefix}: {image.shape}")
         return (image,)
