@@ -61,7 +61,7 @@ class PasteMask:
             "required":{
                 "base_image": ("IMAGE",),
                 "image_to_paste": ("IMAGE",),
-                "mask": ("MASK",),
+                "mask": ("IMAGE",),
             }
         }
 
@@ -78,13 +78,20 @@ class PasteMask:
         image_to_paste = image_to_paste.cpu().numpy()
         image_to_paste = np.clip(image_to_paste, 0, 255).astype(np.uint8)
 
-        mask = mask[0].cpu().numpy()  # Convert mask to NumPy
+        mask = mask[0]
+        mask = mask.cpu().numpy()
+        mask = np.clip(mask, 0, 255).astype(np.uint8)
 
-        if len(mask.shape) == 2:  # if mask is grayscale (height, width)
-            mask = np.expand_dims(mask, axis=-1)  # Add a channel dimension
-    
-        # Normalize the mask to be between 0 and 1
+        if len(mask.shape) == 3 and mask.shape[-1] == 3:  # if mask is in RGB
+            mask = mask[:, :, 0]  # Use the red channel or convert to grayscale
+
+        # Normalize the mask to be between 0 and 1, where 255 (white) becomes 1
         mask = mask / 255.0
+
+        # Expand the mask to have the same number of channels as the images
+        if len(base_image.shape) == 3 and base_image.shape[-1] > 1:
+            mask = np.expand_dims(mask, axis=-1)  # Add a channel dimension
+            mask = np.repeat(mask, base_image.shape[-1], axis=-1)  # Repeat across all channels
 
         # Cut out the region from image_to_paste using the mask
         cut_out = image_to_paste * mask
@@ -95,9 +102,6 @@ class PasteMask:
         # Blend the cut-out region into the base image
         base_image = base_image * inverse_mask + cut_out
 
-        # Convert back to a format with batch size of 1
-        result_image = np.expand_dims(base_image, axis=0)
-
-        result_image = torch.from_numpy(result_image).unsqueeze(0).float()
+        result_image = torch.from_numpy(base_image).unsqueeze(0).float()
 
         return result_image
