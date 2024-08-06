@@ -107,7 +107,7 @@ class PasteMask:
     RETURN_NAMES = ("image",)
     FUNCTION = "func"
 
-    def func(self, image_base, image_to_paste, mask, resize_behavior, mask_mapping_optional = None):
+    def func(self, image_base, image_to_paste, mask):
         image_base = tensor2rgba(image_base)
         image_to_paste = tensor2rgba(image_to_paste)
         mask = tensor2mask(mask)
