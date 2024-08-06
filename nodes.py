@@ -129,7 +129,9 @@ class PasteMask:
         # Create a three-channel mask if the image is RGB
         if len(base_image.shape) == 3 and base_image.shape[-1] == 3:
             mask = np.repeat(mask[:, :, np.newaxis], 3, axis=2)
-        
+        print("mask shape:", mask.shape)
+        print("base_image shape:", base_image.shape)
+        print("image_to_paste shape:", image_to_paste.shape)
         # Cut out the part of image_to_paste where mask is non-black
         cut_out_image = image_to_paste * mask
         
