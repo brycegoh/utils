@@ -108,38 +108,48 @@ class PasteMask:
     FUNCTION = "func"
 
     def func(self, image_base, image_to_paste, mask):
-        base_image = image_base[0]
-        base_image = 255. * base_image.cpu().numpy()  # Convert to NumPy and scale
-        base_image = np.clip(base_image, 0, 255).astype(np.uint8)  # Ensure it's in uint8 format
+        combined_images = []
+        cut_out_images = []
 
-        image_to_paste = image_to_paste[0]
-        image_to_paste = 255. * image_to_paste.cpu().numpy()
-        image_to_paste = np.clip(image_to_paste, 0, 255).astype(np.uint8)
+        for i in range(len(image_base)):
+            base_image = image_base[i]
+            base_image = 255. * base_image.cpu().numpy()  # Convert to NumPy and scale
+            base_image = np.clip(base_image, 0, 255).astype(np.uint8)  # Ensure it's in uint8 format
 
+            image_to_paste = image_to_paste[i]
+            image_to_paste = 255. * image_to_paste.cpu().numpy()
+            image_to_paste = np.clip(image_to_paste, 0, 255).astype(np.uint8)
 
-        mask = mask[0]
-        mask = 255. * mask.cpu().numpy()
-        mask = np.clip(mask, 0, 255).astype(np.uint8)
+            mask = mask[i]
+            mask = 255. * mask.cpu().numpy()
+            mask = np.clip(mask, 0, 255).astype(np.uint8)
 
-        boolean_mask = mask > 0  # This creates a boolean mask where non-zero values are True
-        
-        boolean_mask = boolean_mask.astype(np.uint8)  # Convert boolean mask to uint8 for multiplication
-        
-        # Ensure the boolean mask matches the image shape
-        assert boolean_mask.shape == image_to_paste.shape == base_image.shape, \
-            f"Boolean mask shape {boolean_mask.shape} does not match image_to_paste shape {image_to_paste.shape} or base_image shape {base_image.shape}"
-        
-        # Cut out the part of image_to_paste where mask is non-zero
-        cut_out_image = image_to_paste * boolean_mask
-        
-        # Paste the cut out onto the base image
-        combined_image = base_image * (1 - boolean_mask) + cut_out_image
-        
-        # Convert the final image back to the format needed for further processing
-        combined_image = torch.from_numpy(combined_image / 255.0).unsqueeze(0)  # Add batch dimension
-        cut_out_image = torch.from_numpy(cut_out_image / 255.0).unsqueeze(0)  # Add batch dimension
-        
-        return (combined_image,cut_out_image)
+            boolean_mask = mask > 0  # This creates a boolean mask where non-zero values are True
+            boolean_mask = boolean_mask.astype(np.uint8)  # Convert boolean mask to uint8 for multiplication
+            
+            # Ensure the boolean mask matches the image shape
+            assert boolean_mask.shape == image_to_paste.shape == base_image.shape, \
+                f"Boolean mask shape {boolean_mask.shape} does not match image_to_paste shape {image_to_paste.shape} or base_image shape {base_image.shape}"
+            
+            # Cut out the part of image_to_paste where mask is non-zero
+            cut_out_image = image_to_paste * boolean_mask
+            
+            # Paste the cut out onto the base image
+            combined_image = base_image * (1 - boolean_mask) + cut_out_image
+            
+            # Convert the final image back to the format needed for further processing
+            combined_image = torch.from_numpy(combined_image / 255.0).unsqueeze(0)  # Add batch dimension
+            cut_out_image = torch.from_numpy(cut_out_image / 255.0).unsqueeze(0)  # Add batch dimension
+            
+            # Store the results for each image
+            combined_images.append(combined_image)
+            cut_out_images.append(cut_out_image)
+
+        # Stack the results to create tensors of shape (batch_size, ...)
+        combined_images = torch.cat(combined_images, dim=0)
+        cut_out_images = torch.cat(cut_out_images, dim=0)
+
+        return combined_images, cut_out_images
 
 
 class PrintImageSize:
