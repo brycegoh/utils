@@ -149,7 +149,7 @@ class PasteMask:
         combined_images = torch.cat(combined_images, dim=0)
         cut_out_images = torch.cat(cut_out_images, dim=0)
 
-        return combined_images, cut_out_images
+        return (combined_images, cut_out_images)
 
 
 class PrintImageSize:
