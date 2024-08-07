@@ -120,10 +120,10 @@ class PasteMask:
             base_image = np.clip(base_image, 0, 255).astype(np.uint8)  # Ensure it's in uint8 format
 
             image_to_paste = image_to_paste[i]
-            if isinstance(image_to_paste_i, torch.Tensor):
-                image_to_paste_i = 255. * image_to_paste_i.cpu().numpy()
+            if isinstance(image_to_paste, torch.Tensor):
+                image_to_paste = 255. * image_to_paste.cpu().numpy()
             else:
-                image_to_paste_i = 255. * image_to_paste_i 
+                image_to_paste = 255. * image_to_paste 
             image_to_paste = np.clip(image_to_paste, 0, 255).astype(np.uint8)
 
             mask = mask[0]
