@@ -120,7 +120,7 @@ class PasteMask:
             image_to_paste = 255. * image_to_paste.cpu().numpy()
             image_to_paste = np.clip(image_to_paste, 0, 255).astype(np.uint8)
 
-            mask = mask[i]
+            mask = mask[0]
             mask = 255. * mask.cpu().numpy()
             mask = np.clip(mask, 0, 255).astype(np.uint8)
 
