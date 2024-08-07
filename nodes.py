@@ -111,6 +111,7 @@ class PasteMask:
         combined_images = []
         cut_out_images = []
 
+        print(f"image_base shape {image_base.shape}, image_to_paste shape {image_to_paste.shape}, mask shape {mask.shape}")
         for i in range(len(image_to_paste)):
             base_image = image_base[0]
             if isinstance(base_image, torch.Tensor):
