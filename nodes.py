@@ -110,10 +110,9 @@ class PasteMask:
     def func(self, image_base, image_to_paste, mask):
         combined_images = []
         cut_out_images = []
-        print(f"Image base shape: {image_base.shape}")
-        print(f"Image base length: {len(image_base)}")
-        for i in range(len(image_base)):
-            base_image = image_base[i]
+
+        for i in range(len(image_to_paste)):
+            base_image = image_base[0]
             base_image = 255. * base_image.cpu().numpy()  # Convert to NumPy and scale
             base_image = np.clip(base_image, 0, 255).astype(np.uint8)  # Ensure it's in uint8 format
 
