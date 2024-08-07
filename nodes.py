@@ -127,10 +127,10 @@ class PasteMask:
             image_to_paste = np.clip(image_to_paste, 0, 255).astype(np.uint8)
 
             mask = mask[0]
-            if isinstance(mask_i, torch.Tensor):
-                mask_i = 255. * mask_i.cpu().numpy()
+            if isinstance(mask, torch.Tensor):
+                mask = 255. * mask.cpu().numpy()
             else:
-                mask_i = 255. * mask_i  # If it's already a NumPy array
+                mask = 255. * mask  # If it's already a NumPy array
             mask = np.clip(mask, 0, 255).astype(np.uint8)
 
             boolean_mask = mask > 0  # This creates a boolean mask where non-zero values are True
