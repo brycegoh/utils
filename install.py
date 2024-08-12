@@ -1,8 +1,8 @@
+import os
 os.system("pip3 install natten==0.17.1+torch240cu124 -f https://shi-labs.com/natten/wheels/")
 os.system("pip3 install -r requirements.txt")
 
 from transformers import OneFormerProcessor, OneFormerForUniversalSegmentation
-import os
 
 def main():    
   # set HF_HOME env var
