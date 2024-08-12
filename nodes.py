@@ -238,7 +238,11 @@ class OneformerDinatSegmentation:
                 [71, 0, 255], [122, 0, 255], [0, 255, 184], [0, 92, 255],
                 [184, 255, 0], [0, 133, 255], [255, 214, 0], [25, 194, 194],
                 [102, 255, 0], [92, 0, 255]]
-        model_path = get_model_path()
+        comfy_path = os.environ.get('COMFYUI_PATH')
+        if comfy_path is None:
+            comfy_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+        
+        model_path = os.path.abspath(os.path.join(comfy_path, 'models'))
         processor = OneFormerProcessor.from_pretrained("shi-labs/oneformer_ade20k_dinat_large", cache_dir=model_path)
         model = OneFormerForUniversalSegmentation.from_pretrained("shi-labs/oneformer_ade20k_dinat_large", cache_dir=model_path)
         images = []
