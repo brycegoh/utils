@@ -1,3 +1,6 @@
+os.system("pip3 install natten==0.17.1+torch240cu124 -f https://shi-labs.com/natten/wheels/")
+os.system("pip3 install -r requirements.txt")
+
 from transformers import OneFormerProcessor, OneFormerForUniversalSegmentation
 import os
 
@@ -15,6 +18,7 @@ def main():
 
   OneFormerProcessor.from_pretrained("shi-labs/oneformer_ade20k_dinat_large", cache_dir=model_path)
   OneFormerForUniversalSegmentation.from_pretrained("shi-labs/oneformer_ade20k_dinat_large", cache_dir=model_path)
-
 if __name__ == "__main__":
     main()
+
+# pip3 install natten==0.17.1+torch240cu124 -f https://shi-labs.com/natten/wheels/
