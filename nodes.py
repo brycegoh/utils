@@ -255,10 +255,10 @@ class OneformerDinatSegmentation:
             img = np.clip(img, 0, 255).astype(np.uint8)
             img = Image.fromarray(img)
             
-            semantic_inputs = processor(images=image, task_inputs=["semantic"], return_tensors="pt").to("cuda")
+            semantic_inputs = processor(images=img, task_inputs=["semantic"], return_tensors="pt").to("cuda")
             with torch.no_grad():
                 semantic_outputs = model(**semantic_inputs)
-            predicted_semantic_map = processor.post_process_semantic_segmentation(semantic_outputs, target_sizes=[image.size[::-1]])[0]
+            predicted_semantic_map = processor.post_process_semantic_segmentation(semantic_outputs, target_sizes=[img.size[::-1]])[0]
             predicted_semantic_map_np = predicted_semantic_map.cpu().numpy()
             palette = np.array(palette)
             # Map the tensor values to the palette
