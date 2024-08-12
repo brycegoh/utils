@@ -1,5 +1,5 @@
 import os
-os.system("pip3 install natten==0.17.1+torch240cu121 -f https://shi-labs.com/natten/wheels/")
+os.system("pip3 install natten==0.17.1+torch220cu121 -f https://shi-labs.com/natten/wheels/")
 os.system("pip3 install -r requirements.txt")
 
 from transformers import OneFormerProcessor, OneFormerForUniversalSegmentation
